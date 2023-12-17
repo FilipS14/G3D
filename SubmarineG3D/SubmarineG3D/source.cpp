@@ -22,6 +22,16 @@
 
 int main()
 {
+	Shader lightingShader("PhongLight.vs", "PhongLight.fs");
+	Shader lampShader("Lamp.vs", "Lamp.fs");
+	while (!glfwWindowShouldClose(window)) {
+		lightingShader.Use();
+		lightingShader.SetVec3("objectColor", 0.9f, 0.85f, 0.8f);
+
+		glm::mat4 model = glm::scale(glm::mat4(1.0), glm::vec3(3.0f));
+		lightingShader.SetMat4("model", model);
+		renderFloor();
+	}
 }
 
 void renderFloor()
