@@ -20,11 +20,27 @@
 #pragma comment (lib, "glew32.lib")
 #pragma comment (lib, "OpenGL32.lib")
 
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+void renderFloor();
+
+
+
 int main()
 {
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SubmarineG3D", NULL, NULL);
+	if (window == NULL) {
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+
 	Shader lightingShader("PhongLight.vs", "PhongLight.fs");
 	Shader lampShader("Lamp.vs", "Lamp.fs");
 	while (!glfwWindowShouldClose(window)) {
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		lightingShader.Use();
 		lightingShader.SetVec3("objectColor", 0.9f, 0.85f, 0.8f);
 
