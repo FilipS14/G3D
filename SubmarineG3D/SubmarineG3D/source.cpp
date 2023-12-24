@@ -35,6 +35,8 @@ int main()
 		return -1;
 	}
 
+	renderScene();
+
 	Shader lightingShader("PhongLight.vs", "PhongLight.fs");
 	Shader lampShader("Lamp.vs", "Lamp.fs");
 	while (!glfwWindowShouldClose(window)) {
@@ -129,4 +131,17 @@ void renderScene()
 	-25.0f,  25.0f,  25.0f,  0.0f,  1.0f,  0.0f,
 	-25.0f,  25.0f, -25.0f,  0.0f,  1.0f,  0.0f
 	};
+
+	glGenVertexArrays(1, &cubeVAO);
+	glGenBuffers(1, &VBO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindVertexArray(cubeVAO);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 }
