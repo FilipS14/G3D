@@ -36,8 +36,6 @@ int main()
 		return -1;
 	}
 
-	renderScene();
-
 	Shader lightingShader("PhongLight.vs", "PhongLight.fs");
 	Shader lampShader("Lamp.vs", "Lamp.fs");
 	while (!glfwWindowShouldClose(window)) {
@@ -45,10 +43,12 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		lightingShader.Use();
-		lightingShader.SetVec3("objectColor", 0.9f, 0.85f, 0.8f);
+		lightingShader.SetVec3("objectColor", 1.0f, 1.0f, 1.0f);
+		renderScene();
 
 		glm::mat4 model = glm::scale(glm::mat4(1.0), glm::vec3(3.0f));
 		lightingShader.SetMat4("model", model);
+		lightingShader.SetVec3("objectColor", 0.588f, 0.294f, 0.0f);
 		renderFloor();
 	}
 }
@@ -152,4 +152,11 @@ void renderScene()
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(cubeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	glBindVertexArray(lightVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
