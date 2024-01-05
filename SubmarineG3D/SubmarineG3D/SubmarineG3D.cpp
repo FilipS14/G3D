@@ -230,6 +230,53 @@ void processInput(GLFWwindow* window);
 
 int main()
 {
+
+	CreateTextures(currentPath);
+	while (!glfwWindowShouldClose(window)) {
+		double currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		processInput(window);
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		lightingShader.use();
+		lightingShader.SetVec3("objectColor", 1.0f, 1.0f, 1.0f);
+
+		lightingShader.SetVec3("lightColor", 0.1f, 0.1f, 0.3f);
+		lightingShader.SetVec3("lightPos", lightPos);
+		lightingShader.SetVec3("viewPos", pCamera->GetPosition());
+		lightingShader.SetFloat("ka", kaValue);
+
+		lightingShader.setMat4("projection", pCamera->GetProjectionMatrix());
+		lightingShader.setMat4("view", pCamera->GetViewMatrix());
+
+		lightingShader.setMat4("model", glm::mat4(1.0f));
+		renderFloor();
+
+		lightingShader.SetVec3("objectColor", 1.0f, 0.0f, 0.0f);
+
+
+		lightingShader.setMat4("model", submarineModel);
+		submarineObjModel.Draw(lightingShader);
+
+
+		lampShader.use();
+		lampShader.setMat4("projection", pCamera->GetProjectionMatrix());
+		lampShader.setMat4("view", pCamera->GetViewMatrix());
+		glm::mat4 lightModel = glm::translate(glm::mat4(1.0), lightPos);
+		lightModel = glm::scale(lightModel, glm::vec3(0.25f));
+		lampShader.setMat4("model", lightModel);
+
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+	}
+
 	float vertices[] = {
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
