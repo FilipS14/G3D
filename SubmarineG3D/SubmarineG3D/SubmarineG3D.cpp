@@ -1,4 +1,3 @@
-
 #include <Windows.h>
 #include <locale>
 #include <codecvt>
@@ -30,11 +29,15 @@
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+float xmove = 0.0f, ymove = -1.5f, zmove = 0.0f, ymax = 0.0f, turnX = 0.0f, turnZ = 0.0f;
 float myTime = 0.0f;
 bool shouldExit = false;
 
 
-
+bool frontTurn = true;
+bool backTurn = false;
+bool leftTurn = false;
+bool rightTurn = false;
 bool clipped = false;
 
 void renderFloor();
@@ -489,7 +492,37 @@ int main()
 
 		lightingShader.setMat4("model", submarineModel);
 		submarineObjModel.Draw(lightingShader);
+		glm::mat4 submarineModel = glm::mat4(1.0);
 
+		glm::vec3 translation = glm::vec3(xmove, ymove, zmove);
+		submarineModel = glm::translate(submarineModel, translation);
+
+		float rotateAngle = glm::radians(90.0f);
+		glm::vec3 rotationAxis = glm::vec3(-1.0f, 0.0f, 0.0f);
+		submarineModel = glm::rotate(submarineModel, rotateAngle, rotationAxis);
+
+		if (frontTurn == true)
+		{
+		}
+		else if (backTurn == true)
+		{
+			submarineModel = glm::rotate(submarineModel, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+		}
+		else if (leftTurn == true)
+		{
+			submarineModel = glm::rotate(submarineModel, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+		else if (rightTurn == true)
+		{
+			submarineModel = glm::rotate(submarineModel, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+		}
+
+		if (clipped == true) {
+			pCamera->Set(SCR_WIDTH, SCR_HEIGHT, glm::vec3(xmove, ymove + 0.3f, zmove + 1.1f));
+		}
+
+		lightingShader.setMat4("model", submarineModel);
+		submarineObjModel.Draw(lightingShader);
 
 		lampShader.use();
 		lampShader.setMat4("projection", pCamera->GetProjectionMatrix());
@@ -524,121 +557,45 @@ int main()
 
 
 	}
-
 }
-void renderFloor()
-{
-	unsigned int planeVAO;
-	unsigned int planeVBO;
 
-	float planeVertices[] = {
-		40.0f, -0.5f,  40.0f,  0.0f, 1.0f, 0.0f,  40.0f,  0.0f,
-		-40.0f, -0.5f,  40.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-		-40.0f, -0.5f, -40.0f,  0.0f, 1.0f, 0.0f,   0.0f, 40.0f,
-
-		40.0f, -0.5f,  40.0f,  0.0f, 1.0f, 0.0f,  40.0f,  0.0f,
-		-40.0f, -0.5f, -40.0f,  0.0f, 1.0f, 0.0f,   0.0f, 40.0f,
-		40.0f, -0.5f, -40.0f,  0.0f, 1.0f, 0.0f,  40.0f, 40.0f
-	};
-	glGenVertexArrays(1, &planeVAO);
-	glGenBuffers(1, &planeVBO);
-	glBindVertexArray(planeVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glBindVertexArray(0);
-
-
-
-	glBindVertexArray(planeVAO);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture1Location);
-
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-
-	//unsigned int planeVAO;
-	//unsigned int planeVBO;
-	//const int planeWidth = 100;
-	//const int planeLength = 100;
-
-	//const int numWaves = 3;
-	//const float waveData[numWaves][2] = {
-	//	{1.0f, 0.1f},
-	//	{0.8f, 0.2f},
-	//	{0.5f, 0.4f}    
-	//};
-
-	//float planeVertices[planeWidth * planeLength * 8];
-
-	//int vertexIndex = 0;
-
-	//for (int i = 0; i < planeWidth; ++i)
-	//{
-	//	for (int j = 0; j < planeLength; ++j)
-	//	{
-	//		float x = static_cast<float>(i) - planeWidth / 2.0f;
-	//		float z = static_cast<float>(j) - planeLength / 2.0f;
-
-
-	//		float totalHeight = 0.0f;
-
-	//		for (int wave = 0; wave < numWaves; ++wave)
-	//		{
-	//			float waveAmplitude = waveData[wave][0];
-	//			float waveFrequency = waveData[wave][1];
-	//			totalHeight += waveAmplitude * sin(waveFrequency * myTime + x * 0.1f + z * 0.1f);
-	//		}
-
-	//		planeVertices[vertexIndex++] = x;
-	//		planeVertices[vertexIndex++] = totalHeight;
-	//		planeVertices[vertexIndex++] = z;
-
-	//		planeVertices[vertexIndex++] = 0.0f;
-	//		planeVertices[vertexIndex++] = 1.0f;
-	//		planeVertices[vertexIndex++] = 0.0f;
-
-	//		planeVertices[vertexIndex++] = x / planeWidth;
-	//		planeVertices[vertexIndex++] = z / planeLength;
-	//	}
-	//}
-
-
-	//// plane VAO
-	//glGenVertexArrays(1, &planeVAO);
-	//glGenBuffers(1, &planeVBO);
-	//glBindVertexArray(planeVAO);
-	//glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(2);
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	//glBindVertexArray(0);
-
-	//glBindVertexArray(planeVAO);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//glEnable(GL_POLYGON_SMOOTH);
-	//glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-
-	//glDrawArrays(GL_TRIANGLES, 0, (planeWidth - 1) * (planeLength - 1) * 6);
-
-	//glDeleteVertexArrays(1, &planeVAO);
-	//glDeleteBuffers(1, &planeVBO);
-}
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-
-
+	//Filip begin
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	{
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			frontTurn = true;
+			backTurn = false;
+			leftTurn = false;
+			rightTurn = false;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			frontTurn = false;
+			backTurn = true;
+			leftTurn = false;
+			rightTurn = false;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			frontTurn = false;
+			backTurn = false;
+			leftTurn = true;
+			rightTurn = false;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			frontTurn = false;
+			backTurn = false;
+			leftTurn = false;
+			rightTurn = true;
+		}
+	}
+	//Filip end
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		pCamera->ProcessKeyboard(FORWARD, (float)deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
@@ -651,8 +608,63 @@ void processInput(GLFWwindow* window)
 		pCamera->ProcessKeyboard(UP, (float)deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
 		pCamera->ProcessKeyboard(DOWN, (float)deltaTime);
-	
+	//filip begin
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		if (frontTurn == true)
+		{
+			zmove -= 0.001f;
+		}
+		else if (backTurn == true)
+		{
+			zmove += 0.001f;
+		}
+		else if (leftTurn == true)
+		{
+			xmove -= 0.001f;
+		}
+		else if (rightTurn == true)
+		{
+			xmove += 0.001f;
+		}
+	}
+	else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		if (frontTurn == true)
+		{
+			zmove += 0.001f;
+		}
+		else if (backTurn == true)
+		{
+			zmove -= 0.001f;
+		}
+		else if (leftTurn == true)
+		{
+			xmove += 0.001f;
+		}
+		else if (rightTurn == true)
+		{
+			xmove -= 0.001f;
+		}
+	}
 
+	else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		if (ymax < 1.02f)
+		{
+			ymove += 0.001f;
+			ymax += 0.001f;
+		}
+	}
+	else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		if (ymax > -1.0f)
+		{
+			ymove -= 0.001f;
+			ymax -= 0.001f;
+		}
+	}
+	//filip end
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
 	{
 		if (clipped == true)
@@ -680,7 +692,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	pCamera->Reshape(width, height);
 }
 
-
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	pCamera->MouseControl((float)xpos, (float)ypos);
@@ -690,3 +701,4 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yOffset)
 {
 	pCamera->ProcessMouseScroll((float)yOffset);
 }
+
