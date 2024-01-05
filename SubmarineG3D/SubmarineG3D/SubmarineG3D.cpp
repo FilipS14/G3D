@@ -282,51 +282,6 @@ void processInput(GLFWwindow* window);
 int main()
 {
 
-	CreateTextures(currentPath);
-	while (!glfwWindowShouldClose(window)) {
-		double currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
-		processInput(window);
-
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-		lightingShader.use();
-		lightingShader.SetVec3("objectColor", 1.0f, 1.0f, 1.0f);
-
-		lightingShader.SetVec3("lightColor", 0.1f, 0.1f, 0.3f);
-		lightingShader.SetVec3("lightPos", lightPos);
-		lightingShader.SetVec3("viewPos", pCamera->GetPosition());
-		lightingShader.SetFloat("ka", kaValue);
-
-		lightingShader.setMat4("projection", pCamera->GetProjectionMatrix());
-		lightingShader.setMat4("view", pCamera->GetViewMatrix());
-
-		lightingShader.setMat4("model", glm::mat4(1.0f));
-		renderFloor();
-
-		lightingShader.SetVec3("objectColor", 1.0f, 0.0f, 0.0f);
-
-
-		lightingShader.setMat4("model", submarineModel);
-		submarineObjModel.Draw(lightingShader);
-
-
-		lampShader.use();
-		lampShader.setMat4("projection", pCamera->GetProjectionMatrix());
-		lampShader.setMat4("view", pCamera->GetViewMatrix());
-		glm::mat4 lightModel = glm::translate(glm::mat4(1.0), lightPos);
-		lightModel = glm::scale(lightModel, glm::vec3(0.25f));
-		lampShader.setMat4("model", lightModel);
-
-		glBindVertexArray(lightVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-	}
 
 	float vertices[] = {
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -452,9 +407,123 @@ int main()
 
 	Shader lightingShader((currentPath + "\\Shaders\\PhongLight.vs").c_str(), (currentPath + "\\Shaders\\PhongLight.fs").c_str());
 	Shader lampShader((currentPath + "\\Shaders\\Lamp.vs").c_str(), (currentPath + "\\Shaders\\Lamp.fs").c_str());
+	Shader skyboxShader((currentPath + "\\Shaders\\skybox.vs").c_str(), (currentPath + "\\Shaders\\skybox.fs").c_str());
+
+	while (ok != 0 && ok != 1)
+	{
+		std::cout << "(0)Day or (1)night?";
+		std::cin >> ok;
+	}
+
+	std::vector<std::string> faces
+	{
+		currentPath + "\\Textures\\right2.jpg",
+		currentPath + "\\Textures\\left2.jpg",
+		currentPath + "\\Textures\\top.jpg",
+		currentPath + "\\Textures\\blue.jpg",
+		currentPath + "\\Textures\\front2.jpg",
+		currentPath + "\\Textures\\back2.jpg",
+	};
+
+	std::vector<std::string> faces2
+	{
+		currentPath + "\\Textures\\nightRight.jpg",
+		currentPath + "\\Textures\\nightLeft.jpg",
+		currentPath + "\\Textures\\nightTop.jpg",
+		currentPath + "\\Textures\\nightBottom.jpg",
+		currentPath + "\\Textures\\nightFront.jpg",
+		currentPath + "\\Textures\\nightBack.jpg",
+	};
+
+
+	unsigned int cubemapTexture;
+
+	if (ok == 0)
+	{
+		cubemapTexture = loadCubemap(faces);
+	}
+	else if (ok == 1)
+	{
+		cubemapTexture = loadCubemap(faces2);
+	}
+
+
+	unsigned int skyboxVAO, skyboxVBO;
+	glGenVertexArrays(1, &skyboxVAO);
+	glBindVertexArray(skyboxVAO);
+	glGenBuffers(1, &skyboxVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	CreateTextures(currentPath);
+	while (!glfwWindowShouldClose(window)) {
+		double currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		processInput(window);
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		lightingShader.use();
+		lightingShader.SetVec3("objectColor", 1.0f, 1.0f, 1.0f);
+
+		lightingShader.SetVec3("lightColor", 0.1f, 0.1f, 0.3f);
+		lightingShader.SetVec3("lightPos", lightPos);
+		lightingShader.SetVec3("viewPos", pCamera->GetPosition());
+		lightingShader.SetFloat("ka", kaValue);
+
+		lightingShader.setMat4("projection", pCamera->GetProjectionMatrix());
+		lightingShader.setMat4("view", pCamera->GetViewMatrix());
+
+		lightingShader.setMat4("model", glm::mat4(1.0f));
+		renderFloor();
+
+		lightingShader.SetVec3("objectColor", 1.0f, 0.0f, 0.0f);
+
+
+		lightingShader.setMat4("model", submarineModel);
+		submarineObjModel.Draw(lightingShader);
+
+
+		lampShader.use();
+		lampShader.setMat4("projection", pCamera->GetProjectionMatrix());
+		lampShader.setMat4("view", pCamera->GetViewMatrix());
+		glm::mat4 lightModel = glm::translate(glm::mat4(1.0), lightPos);
+		lightModel = glm::scale(lightModel, glm::vec3(0.25f));
+		lampShader.setMat4("model", lightModel);
+
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glDepthFunc(GL_LEQUAL);
+		skyboxShader.use();
+		glm::mat4 view = glm::mat4(glm::mat3(pCamera->GetViewMatrix()));
+		skyboxShader.setMat4("view", view);
+		skyboxShader.setMat4("projection", pCamera->GetProjectionMatrix());
+
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glBindVertexArray(skyboxVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+		glDepthFunc(GL_LESS);
 
 
 
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+
+	}
 
 }
 void renderFloor()
