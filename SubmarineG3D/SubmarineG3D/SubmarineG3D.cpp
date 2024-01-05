@@ -10,6 +10,16 @@
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+float myTime = 0.0f;
+bool shouldExit = false;
+
+
+
+bool clipped = false;
+
+void renderFloor();
+
 enum ECameraMovementType
 {
 	UNKNOWN,
@@ -217,3 +227,167 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+void renderFloor()
+{
+	unsigned int planeVAO;
+	unsigned int planeVBO;
+
+	float planeVertices[] = {
+		40.0f, -0.5f,  40.0f,  0.0f, 1.0f, 0.0f,  40.0f,  0.0f,
+		-40.0f, -0.5f,  40.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-40.0f, -0.5f, -40.0f,  0.0f, 1.0f, 0.0f,   0.0f, 40.0f,
+
+		40.0f, -0.5f,  40.0f,  0.0f, 1.0f, 0.0f,  40.0f,  0.0f,
+		-40.0f, -0.5f, -40.0f,  0.0f, 1.0f, 0.0f,   0.0f, 40.0f,
+		40.0f, -0.5f, -40.0f,  0.0f, 1.0f, 0.0f,  40.0f, 40.0f
+	};
+	glGenVertexArrays(1, &planeVAO);
+	glGenBuffers(1, &planeVBO);
+	glBindVertexArray(planeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glBindVertexArray(0);
+
+
+
+	glBindVertexArray(planeVAO);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1Location);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	//unsigned int planeVAO;
+	//unsigned int planeVBO;
+	//const int planeWidth = 100;
+	//const int planeLength = 100;
+
+	//const int numWaves = 3;
+	//const float waveData[numWaves][2] = {
+	//	{1.0f, 0.1f},
+	//	{0.8f, 0.2f},
+	//	{0.5f, 0.4f}    
+	//};
+
+	//float planeVertices[planeWidth * planeLength * 8];
+
+	//int vertexIndex = 0;
+
+	//for (int i = 0; i < planeWidth; ++i)
+	//{
+	//	for (int j = 0; j < planeLength; ++j)
+	//	{
+	//		float x = static_cast<float>(i) - planeWidth / 2.0f;
+	//		float z = static_cast<float>(j) - planeLength / 2.0f;
+
+
+	//		float totalHeight = 0.0f;
+
+	//		for (int wave = 0; wave < numWaves; ++wave)
+	//		{
+	//			float waveAmplitude = waveData[wave][0];
+	//			float waveFrequency = waveData[wave][1];
+	//			totalHeight += waveAmplitude * sin(waveFrequency * myTime + x * 0.1f + z * 0.1f);
+	//		}
+
+	//		planeVertices[vertexIndex++] = x;
+	//		planeVertices[vertexIndex++] = totalHeight;
+	//		planeVertices[vertexIndex++] = z;
+
+	//		planeVertices[vertexIndex++] = 0.0f;
+	//		planeVertices[vertexIndex++] = 1.0f;
+	//		planeVertices[vertexIndex++] = 0.0f;
+
+	//		planeVertices[vertexIndex++] = x / planeWidth;
+	//		planeVertices[vertexIndex++] = z / planeLength;
+	//	}
+	//}
+
+
+	//// plane VAO
+	//glGenVertexArrays(1, &planeVAO);
+	//glGenBuffers(1, &planeVBO);
+	//glBindVertexArray(planeVAO);
+	//glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	//glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	//glEnableVertexAttribArray(2);
+	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	//glBindVertexArray(0);
+
+	//glBindVertexArray(planeVAO);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//glEnable(GL_POLYGON_SMOOTH);
+	//glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+	//glDrawArrays(GL_TRIANGLES, 0, (planeWidth - 1) * (planeLength - 1) * 6);
+
+	//glDeleteVertexArrays(1, &planeVAO);
+	//glDeleteBuffers(1, &planeVBO);
+}
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		pCamera->ProcessKeyboard(FORWARD, (float)deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		pCamera->ProcessKeyboard(BACKWARD, (float)deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		pCamera->ProcessKeyboard(LEFT, (float)deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		pCamera->ProcessKeyboard(RIGHT, (float)deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
+		pCamera->ProcessKeyboard(UP, (float)deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
+		pCamera->ProcessKeyboard(DOWN, (float)deltaTime);
+	
+
+	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+	{
+		if (clipped == true)
+		{
+			clipped = false;
+		}
+		else if (clipped == false)
+		{
+			clipped = true;
+		}
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+		int width, height;
+		glfwGetWindowSize(window, &width, &height);
+		pCamera->Reset(width, height);
+
+	}
+
+}
+
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	pCamera->Reshape(width, height);
+}
+
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	pCamera->MouseControl((float)xpos, (float)ypos);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yOffset)
+{
+	pCamera->ProcessMouseScroll((float)yOffset);
+}
