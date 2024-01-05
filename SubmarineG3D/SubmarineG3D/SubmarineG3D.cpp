@@ -1,12 +1,31 @@
 
+#include <Windows.h>
+#include <locale>
+#include <codecvt>
 
+#include <stdlib.h> 
+#include <stdio.h>
+#include <math.h> 
 
+#include <GL/glew.h>
 
+#include <GLM.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 
+#include <glfw3.h>
 
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include "Shader.h"
+#include "Model.h"
 
+#include "stb_image.h"
 
-
+#pragma comment (lib, "glfw3dll.lib")
+#pragma comment (lib, "glew32.lib")
+#pragma comment (lib, "OpenGL32.lib")
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -222,6 +241,38 @@ void Cleanup()
 	delete pCamera;
 }
 
+unsigned int loadCubemap(vector<std::string> faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return textureID;
+}
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -320,6 +371,51 @@ int main()
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
+
+	float skyboxVertices[] = {
+-1.0f, 1.0f, -1.0f,
+-1.0f, -1.0f, -1.0f,
+ 1.0f, -1.0f, -1.0f,
+ 1.0f, -1.0f, -1.0f,
+ 1.0f, 1.0f, -1.0f,
+ -1.0f, 1.0f, -1.0f,
+
+-1.0f, -1.0f, 1.0f,
+-1.0f, -1.0f, -1.0f,
+-1.0f, 1.0f, -1.0f,
+-1.0f, 1.0f, -1.0f,
+-1.0f, 1.0f, 1.0f,
+-1.0f, -1.0f, 1.0f,
+
+1.0f, -1.0f, 1.0f,
+1.0f, -1.0f, -1.0f,
+1.0f, 1.0f, -1.0f,
+1.0f, 1.0f, -1.0f,
+1.0f, 1.0f, 1.0f,
+1.0f, -1.0f, 1.0f,
+
+-1.0f, -1.0f, 1.0f,
+-1.0f, 1.0f, 1.0f,
+1.0f, 1.0f, 1.0f,
+1.0f, 1.0f, 1.0f,
+1.0f, -1.0f, 1.0f,
+-1.0f, -1.0f, 1.0f,
+
+-1.0f, 1.0f, -1.0f,
+-1.0f, 1.0f, 1.0f,
+1.0f, 1.0f, 1.0f,
+1.0f, 1.0f, 1.0f,
+1.0f, 1.0f, -1.0f,
+-1.0f, 1.0f, -1.0f,
+
+-1.0f, -1.0f, -1.0f,
+-1.0f, -1.0f, 1.0f,
+1.0f, -1.0f, 1.0f,
+1.0f, -1.0f, 1.0f,
+1.0f, -1.0f, -1.0f,
+-1.0f, -1.0f, -1.0f,
+	};
+
 
 
 	unsigned int VBO, cubeVAO;
