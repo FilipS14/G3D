@@ -1,3 +1,4 @@
+
 #include <Windows.h>
 #include <locale>
 #include <codecvt>
@@ -28,11 +29,11 @@
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+float kaValue = 0.5f;
 
 float xmove = 0.0f, ymove = -1.5f, zmove = 0.0f, ymax = 0.0f, turnX = 0.0f, turnZ = 0.0f;
 float myTime = 0.0f;
 bool shouldExit = false;
-
 
 bool frontTurn = true;
 bool backTurn = false;
@@ -40,7 +41,10 @@ bool leftTurn = false;
 bool rightTurn = false;
 bool clipped = false;
 
-void renderFloor();
+int ok = -1;
+
+unsigned int texture1Location;
+
 
 enum ECameraMovementType
 {
@@ -236,12 +240,30 @@ protected:
 	bool bFirstMouseMove = true;
 	float lastX = 0.f, lastY = 0.f;
 };
+
 GLuint ProjMatrixLocation, ViewMatrixLocation, WorldMatrixLocation;
 Camera* pCamera = nullptr;
 
 void Cleanup()
 {
 	delete pCamera;
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow* window);
+
+double deltaTime = 0.0f;
+double lastFrame = 0.0f;
+
+void renderFloor();
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+
+	}
 }
 
 unsigned int loadCubemap(vector<std::string> faces)
@@ -276,15 +298,57 @@ unsigned int loadCubemap(vector<std::string> faces)
 	return textureID;
 }
 
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow* window);
+void CreateTextures(const std::string& strExePath)
+{
+	glGenTextures(1, &texture1Location);
+	glBindTexture(GL_TEXTURE_2D, texture1Location);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	int width, height, nrChannels;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char* data = stbi_load((strExePath + "\\Textures\\bottom.jpg").c_str(), &width, &height, &nrChannels, 0);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else {
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
+}
 
 int main()
 {
+	std::cout << "Instructiuni: " << std::endl;
+	std::cout << "SHIFT + WASD - Selectam directia in care va merge submarinul. " << std::endl;
+	std::cout << "W/S - miscam submarinul fata/spate in directia aleasa. " << std::endl;
+	std::cout << "X - clip/unclip camerei de la pozitia submarinului. " << std::endl;
+	std::cout << "(Sageti) - Miscarea camerei in modul unclipped. " << std::endl << std::endl;
 
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Submarine", NULL, NULL);
+	if (window == NULL) {
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+
+	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetKeyCallback(window, key_callback);
+
+
+	glewInit();
+
+	glEnable(GL_DEPTH_TEST);
 
 	float vertices[] = {
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -330,48 +394,49 @@ int main()
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
 
+
 	float skyboxVertices[] = {
--1.0f, 1.0f, -1.0f,
--1.0f, -1.0f, -1.0f,
- 1.0f, -1.0f, -1.0f,
- 1.0f, -1.0f, -1.0f,
- 1.0f, 1.0f, -1.0f,
- -1.0f, 1.0f, -1.0f,
+	-1.0f, 1.0f, -1.0f,
+	-1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, 1.0f, -1.0f,
+	 -1.0f, 1.0f, -1.0f,
 
--1.0f, -1.0f, 1.0f,
--1.0f, -1.0f, -1.0f,
--1.0f, 1.0f, -1.0f,
--1.0f, 1.0f, -1.0f,
--1.0f, 1.0f, 1.0f,
--1.0f, -1.0f, 1.0f,
+	-1.0f, -1.0f, 1.0f,
+	-1.0f, -1.0f, -1.0f,
+	-1.0f, 1.0f, -1.0f,
+	-1.0f, 1.0f, -1.0f,
+	-1.0f, 1.0f, 1.0f,
+	-1.0f, -1.0f, 1.0f,
 
-1.0f, -1.0f, 1.0f,
-1.0f, -1.0f, -1.0f,
-1.0f, 1.0f, -1.0f,
-1.0f, 1.0f, -1.0f,
-1.0f, 1.0f, 1.0f,
-1.0f, -1.0f, 1.0f,
+	1.0f, -1.0f, 1.0f,
+	1.0f, -1.0f, -1.0f,
+	1.0f, 1.0f, -1.0f,
+	1.0f, 1.0f, -1.0f,
+	1.0f, 1.0f, 1.0f,
+	1.0f, -1.0f, 1.0f,
 
--1.0f, -1.0f, 1.0f,
--1.0f, 1.0f, 1.0f,
-1.0f, 1.0f, 1.0f,
-1.0f, 1.0f, 1.0f,
-1.0f, -1.0f, 1.0f,
--1.0f, -1.0f, 1.0f,
+	-1.0f, -1.0f, 1.0f,
+	-1.0f, 1.0f, 1.0f,
+	1.0f, 1.0f, 1.0f,
+	1.0f, 1.0f, 1.0f,
+	1.0f, -1.0f, 1.0f,
+	-1.0f, -1.0f, 1.0f,
 
--1.0f, 1.0f, -1.0f,
--1.0f, 1.0f, 1.0f,
-1.0f, 1.0f, 1.0f,
-1.0f, 1.0f, 1.0f,
-1.0f, 1.0f, -1.0f,
--1.0f, 1.0f, -1.0f,
+	-1.0f, 1.0f, -1.0f,
+	-1.0f, 1.0f, 1.0f,
+	1.0f, 1.0f, 1.0f,
+	1.0f, 1.0f, 1.0f,
+	1.0f, 1.0f, -1.0f,
+	-1.0f, 1.0f, -1.0f,
 
--1.0f, -1.0f, -1.0f,
--1.0f, -1.0f, 1.0f,
-1.0f, -1.0f, 1.0f,
-1.0f, -1.0f, 1.0f,
-1.0f, -1.0f, -1.0f,
--1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f, 1.0f,
+	1.0f, -1.0f, 1.0f,
+	1.0f, -1.0f, 1.0f,
+	1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f, -1.0f,
 	};
 
 
@@ -399,6 +464,10 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+	pCamera = new Camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0, 0.0, 3.0));
+
+	glm::vec3 lightPos(0.0f, 20.0f, 1.0f);
+
 	wchar_t buffer[MAX_PATH];
 	GetCurrentDirectoryW(MAX_PATH, buffer);
 
@@ -411,6 +480,10 @@ int main()
 	Shader lightingShader((currentPath + "\\Shaders\\PhongLight.vs").c_str(), (currentPath + "\\Shaders\\PhongLight.fs").c_str());
 	Shader lampShader((currentPath + "\\Shaders\\Lamp.vs").c_str(), (currentPath + "\\Shaders\\Lamp.fs").c_str());
 	Shader skyboxShader((currentPath + "\\Shaders\\skybox.vs").c_str(), (currentPath + "\\Shaders\\skybox.fs").c_str());
+
+
+	std::string submarineObjFileName = (currentPath + "\\Models\\Submarin\\Submarin.obj");
+	Model submarineObjModel(submarineObjFileName, false);
 
 	while (ok != 0 && ok != 1)
 	{
@@ -485,13 +558,13 @@ int main()
 		lightingShader.setMat4("view", pCamera->GetViewMatrix());
 
 		lightingShader.setMat4("model", glm::mat4(1.0f));
+
+
+
 		renderFloor();
 
 		lightingShader.SetVec3("objectColor", 1.0f, 0.0f, 0.0f);
 
-
-		lightingShader.setMat4("model", submarineModel);
-		submarineObjModel.Draw(lightingShader);
 		glm::mat4 submarineModel = glm::mat4(1.0);
 
 		glm::vec3 translation = glm::vec3(xmove, ymove, zmove);
@@ -521,8 +594,10 @@ int main()
 			pCamera->Set(SCR_WIDTH, SCR_HEIGHT, glm::vec3(xmove, ymove + 0.3f, zmove + 1.1f));
 		}
 
+
 		lightingShader.setMat4("model", submarineModel);
 		submarineObjModel.Draw(lightingShader);
+
 
 		lampShader.use();
 		lampShader.setMat4("projection", pCamera->GetProjectionMatrix());
@@ -540,9 +615,6 @@ int main()
 		skyboxShader.setMat4("view", view);
 		skyboxShader.setMat4("projection", pCamera->GetProjectionMatrix());
 
-		glBindVertexArray(lightVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
 		glBindVertexArray(skyboxVAO);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
@@ -554,16 +626,132 @@ int main()
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-
-
 	}
+
+	Cleanup();
+
+	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &lightVAO);
+	glDeleteVertexArrays(1, &skyboxVAO);
+	glDeleteBuffers(1, &VBO);
+
+	glfwTerminate();
+	return 0;
+}
+
+void renderFloor()
+{
+	unsigned int planeVAO;
+	unsigned int planeVBO;
+
+	float planeVertices[] = {
+		40.0f, -0.5f,  40.0f,  0.0f, 1.0f, 0.0f,  40.0f,  0.0f,
+		-40.0f, -0.5f,  40.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-40.0f, -0.5f, -40.0f,  0.0f, 1.0f, 0.0f,   0.0f, 40.0f,
+
+		40.0f, -0.5f,  40.0f,  0.0f, 1.0f, 0.0f,  40.0f,  0.0f,
+		-40.0f, -0.5f, -40.0f,  0.0f, 1.0f, 0.0f,   0.0f, 40.0f,
+		40.0f, -0.5f, -40.0f,  0.0f, 1.0f, 0.0f,  40.0f, 40.0f
+	};
+	glGenVertexArrays(1, &planeVAO);
+	glGenBuffers(1, &planeVBO);
+	glBindVertexArray(planeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glBindVertexArray(0);
+
+
+
+	glBindVertexArray(planeVAO);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1Location);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	//unsigned int planeVAO;
+	//unsigned int planeVBO;
+	//const int planeWidth = 100;
+	//const int planeLength = 100;
+
+	//const int numWaves = 3;
+	//const float waveData[numWaves][2] = {
+	//	{1.0f, 0.1f},
+	//	{0.8f, 0.2f},
+	//	{0.5f, 0.4f}    
+	//};
+
+	//float planeVertices[planeWidth * planeLength * 8];
+
+	//int vertexIndex = 0;
+
+	//for (int i = 0; i < planeWidth; ++i)
+	//{
+	//	for (int j = 0; j < planeLength; ++j)
+	//	{
+	//		float x = static_cast<float>(i) - planeWidth / 2.0f;
+	//		float z = static_cast<float>(j) - planeLength / 2.0f;
+
+
+	//		float totalHeight = 0.0f;
+
+	//		for (int wave = 0; wave < numWaves; ++wave)
+	//		{
+	//			float waveAmplitude = waveData[wave][0];
+	//			float waveFrequency = waveData[wave][1];
+	//			totalHeight += waveAmplitude * sin(waveFrequency * myTime + x * 0.1f + z * 0.1f);
+	//		}
+
+	//		planeVertices[vertexIndex++] = x;
+	//		planeVertices[vertexIndex++] = totalHeight;
+	//		planeVertices[vertexIndex++] = z;
+
+	//		planeVertices[vertexIndex++] = 0.0f;
+	//		planeVertices[vertexIndex++] = 1.0f;
+	//		planeVertices[vertexIndex++] = 0.0f;
+
+	//		planeVertices[vertexIndex++] = x / planeWidth;
+	//		planeVertices[vertexIndex++] = z / planeLength;
+	//	}
+	//}
+
+
+	//// plane VAO
+	//glGenVertexArrays(1, &planeVAO);
+	//glGenBuffers(1, &planeVBO);
+	//glBindVertexArray(planeVAO);
+	//glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	//glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	//glEnableVertexAttribArray(2);
+	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	//glBindVertexArray(0);
+
+	//glBindVertexArray(planeVAO);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//glEnable(GL_POLYGON_SMOOTH);
+	//glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+	//glDrawArrays(GL_TRIANGLES, 0, (planeWidth - 1) * (planeLength - 1) * 6);
+
+	//glDeleteVertexArrays(1, &planeVAO);
+	//glDeleteBuffers(1, &planeVBO);
 }
 
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-	//Filip begin
+
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -595,7 +783,7 @@ void processInput(GLFWwindow* window)
 			rightTurn = true;
 		}
 	}
-	//Filip end
+
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		pCamera->ProcessKeyboard(FORWARD, (float)deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
@@ -608,7 +796,6 @@ void processInput(GLFWwindow* window)
 		pCamera->ProcessKeyboard(UP, (float)deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
 		pCamera->ProcessKeyboard(DOWN, (float)deltaTime);
-	//filip begin
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		if (frontTurn == true)
@@ -664,7 +851,7 @@ void processInput(GLFWwindow* window)
 			ymax -= 0.001f;
 		}
 	}
-	//filip end
+
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
 	{
 		if (clipped == true)
@@ -686,7 +873,6 @@ void processInput(GLFWwindow* window)
 
 }
 
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	pCamera->Reshape(width, height);
@@ -701,4 +887,5 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yOffset)
 {
 	pCamera->ProcessMouseScroll((float)yOffset);
 }
+
 
