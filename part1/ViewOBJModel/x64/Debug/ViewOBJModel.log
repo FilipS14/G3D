@@ -1,0 +1,18 @@
+﻿  Mesh.cpp
+C:\Users\Rares\Desktop\ViewOBJModel\ViewOBJModel\Mesh.cpp(8,33): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\Rares\Desktop\ViewOBJModel\ViewOBJModel\Mesh.cpp(17,31): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+  Model.cpp
+  Shader.cpp
+  ViewOBJModel.cpp
+C:\Users\Rares\Desktop\ViewOBJModel\ViewOBJModel\ViewOBJModel.cpp(402,20): warning C4244: '=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\Rares\Desktop\ViewOBJModel\ViewOBJModel\ViewOBJModel.cpp(403,20): warning C4244: '=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+  Generating Code...
+  ViewOBJModel.vcxproj -> C:\Users\Rares\Desktop\ViewOBJModel\x64\Debug\ViewOBJModel.exe
